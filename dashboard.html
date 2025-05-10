@@ -6,7 +6,6 @@
     <title>Customer Support Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js" defer></script>
     <style>
         body {
             background-color: #000000;
@@ -237,791 +236,655 @@
         }
     </style>
 </head>
-<body x-data="{
-    activeSectionId: 'pre-visit',
-    sections: {
-        preVisit: true,
-        connectivityComputers: false,
-        connectivityPhones: false,
-        escalationIssues: false,
-        dataConsumption: false,
-        internetSpeed: false
-    },
-    searchQuery: '',
-    matchCount: 0,
-    expandedSections: 0,
-    
-    // Improved search function with keyword highlighting
-    filter(text) {
-        if (!this.searchQuery) return true;
-        
-        // Split query into words and filter out empty strings
-        const words = this.searchQuery.toLowerCase().split(' ').filter(w => w.trim().length > 0);
-        if (words.length === 0) return true;
-        
-        // Check if all words are in the text
-        const textLower = text.toLowerCase();
-        return words.every(word => textLower.includes(word));
-    },
-    
-    // Add highlighting to content
-    highlightText(text) {
-        if (!this.searchQuery || !text) return text;
-        
-        // Split query into words and filter out empty strings
-        const words = this.searchQuery.toLowerCase().split(' ').filter(w => w.trim().length > 0);
-        if (words.length === 0) return text;
-        
-        // Create regex pattern for all words
-        const pattern = words.join('|');
-        const regex = new RegExp(`(${pattern})`, 'gi');
-        
-        // Replace matches with highlighted span
-        return text.replace(regex, '<span class=\"highlight\">$1</span>');
-    },
-    
-    // Track search stats
-    updateSearchStats() {
-        this.matchCount = 0;
-        this.expandedSections = 0;
-        document.querySelectorAll('.section-card').forEach(section => {
-            if (section.style.display !== 'none') {
-                this.matchCount++;
-                if (section.querySelector('.section-content').style.display !== 'none') {
-                    this.expandedSections++;
+<body>
+    <div class="dashboard-container">
+        <!-- Main Content Division For Alpine.js -->
+        <div x-data="{
+            activeSectionId: 'pre-visit',
+            sections: {
+                preVisit: true,
+                connectivityComputers: false,
+                connectivityPhones: false,
+                escalationIssues: false,
+                dataConsumption: false,
+                internetSpeed: false
+            },
+            searchQuery: '',
+            matchCount: 0,
+            
+            // Simple search function
+            filter: function(text) {
+                if (!this.searchQuery) return true;
+                
+                // Split query into words
+                const words = this.searchQuery.toLowerCase().split(' ');
+                const query = words.filter(word => word.trim() !== '');
+                if (query.length === 0) return true;
+                
+                // Check if all words appear in text
+                const textLower = text.toLowerCase();
+                return query.every(word => textLower.includes(word));
+            },
+            
+            // Count matching sections
+            updateSearchStats: function() {
+                this.matchCount = 0;
+                const sections = document.querySelectorAll('.section-card');
+                for (let i = 0; i < sections.length; i++) {
+                    if (sections[i].style.display !== 'none') {
+                        this.matchCount++;
+                    }
                 }
             }
-        });
-    }
-}">
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="p-5">
-            <h1 class="text-xl font-bold flex items-center text-purple-300">
-                <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12z"></path>
-                    <path fill-rule="evenodd" d="M10 5a1 1 0 00-1 1v3.586L7.707 8.293a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l2-2a1 1 0 10-1.414-1.414L10 9.586V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                </svg>
-                Support Dashboard
-            </h1>
-        </div>
-        
-        <div class="mt-2">
-            <a href="#pre-visit" @click.prevent="activeSectionId = 'pre-visit'; sections.preVisit = true" class="nav-item" :class="{'active': activeSectionId === 'pre-visit'}">
-                <i class="fas fa-clipboard-check nav-icon"></i> Pre-site Visit Checklist
-            </a>
-            <a href="#computer-issues" @click.prevent="activeSectionId = 'computer-issues'; sections.connectivityComputers = true" class="nav-item" :class="{'active': activeSectionId === 'computer-issues'}">
-                <i class="fas fa-laptop nav-icon"></i> Computer Issues
-            </a>
-            <a href="#phone-issues" @click.prevent="activeSectionId = 'phone-issues'; sections.connectivityPhones = true" class="nav-item" :class="{'active': activeSectionId === 'phone-issues'}">
-                <i class="fas fa-mobile-alt nav-icon"></i> Phone Issues
-            </a>
-            <a href="#escalation-guide" @click.prevent="activeSectionId = 'escalation-guide'; sections.escalationIssues = true" class="nav-item" :class="{'active': activeSectionId === 'escalation-guide'}">
-                <i class="fas fa-arrow-up nav-icon"></i> Escalation Guide
-            </a>
-            <a href="#data-consumption" @click.prevent="activeSectionId = 'data-consumption'; sections.dataConsumption = true" class="nav-item" :class="{'active': activeSectionId === 'data-consumption'}">
-                <i class="fas fa-chart-bar nav-icon"></i> Data Consumption
-            </a>
-            <a href="#internet-speed-guide" @click.prevent="activeSectionId = 'internet-speed-guide'; sections.internetSpeed = true" class="nav-item" :class="{'active': activeSectionId === 'internet-speed-guide'}">
-                <i class="fas fa-tachometer-alt nav-icon"></i> Internet Speed Guide
-            </a>
-        </div>
-        
-        <div class="mt-auto p-4 text-center text-sm text-gray-500">
-            <p>Support Dashboard v1.0</p>
-        </div>
-    </div>
-    
-    <!-- Main Content -->
-    <div class="content">
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-white mb-2">Customer Support Dashboard</h1>
-            <p class="text-gray-400">A comprehensive guide for the support team</p>
-        </div>
-
-        <!-- Enhanced Search Box -->
-        <div class="mb-6 relative search-container">
-            <i class="fas fa-search search-icon"></i>
-            <input 
-                type="text" 
-                x-model="searchQuery" 
-                @input="updateSearchStats" 
-                class="search-box" 
-                placeholder="Search for troubleshooting topics (e.g., 'wifi issues', 'slow internet')..."
-                autocomplete="off"
-            >
-            
-            <div class="flex justify-between items-center mt-2" x-show="searchQuery">
-                <div class="search-stats" x-show="searchQuery">
-                    <span x-text="matchCount"></span> results found
+        }">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="p-5">
+                    <h1 class="text-xl font-bold flex items-center text-purple-300">
+                        <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12z"></path>
+                            <path fill-rule="evenodd" d="M10 5a1 1 0 00-1 1v3.586L7.707 8.293a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l2-2a1 1 0 10-1.414-1.414L10 9.586V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                        </svg>
+                        Support Dashboard
+                    </h1>
                 </div>
-            </div>
-        </div>
-
-        <!-- Pre-site Visit Checklist -->
-        <div id="pre-visit" class="section-card" x-show="!searchQuery || filter('pre-site visit checklist computer mobile speed test webapp portal internet access troubleshooting')">
-            <div class="section-header" @click="sections.preVisit = !sections.preVisit">
-                <div class="flex items-center">
-                    <i class="fas fa-clipboard-check text-blue-500 mr-3 text-xl"></i>
-                    <h2 class="text-xl font-semibold">Pre-site Visit Checklist</h2>
-                </div>
-                <i class="fas" :class="sections.preVisit ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-            </div>
-            <div class="section-content" x-show="sections.preVisit">
-                <div class="note-box mb-4">
-                    <p><i class="fas fa-info-circle mr-2"></i> Before we visit your setting, please check the following to ensure that we can make the most of our visit.</p>
-                </div>
-
-                <div class="mb-6">
-                    <h3 class="font-semibold text-lg mb-3 text-blue-300">From a computer that you'll be using:</h3>
-                    
-                    <div class="checklist-item">
-                        <input type="checkbox" id="check_internet_speed" class="form-checkbox">
-                        <label for="check_internet_speed">
-                            Check internet speed here: <a href="https://www.speedtest.net/" target="_blank">https://www.speedtest.net/</a>
-                        </label>
-                    </div>
-                    
-                    <div class="checklist-item">
-                        <input type="checkbox" id="check_webapp_access" class="form-checkbox">
-                        <label for="check_webapp_access">
-                            Access the webapp via a computer: <a href="https://webapp.oxedandassessment.com/language-screen" target="_blank">https://webapp.oxedandassessment.com/language-screen</a>
-                        </label>
-                    </div>
-                    
-                    <div class="checklist-item">
-                        <input type="checkbox" id="check_portal_access" class="form-checkbox">
-                        <label for="check_portal_access">
-                            Access the portal via a computer: <a href="https://programaneli.com/py/" target="_blank">https://programaneli.com/py/</a>
-                        </label>
-                    </div>
-                    
-                    <div class="checklist-item">
-                        <input type="checkbox" id="check_other_sites" class="form-checkbox">
-                        <label for="check_other_sites">
-                            Try other websites (e.g., <a href="https://www.google.com/" target="_blank">www.google.com</a>, <a href="https://www.bbc.com/" target="_blank">www.bbc.com</a>) to rule out general internet outage.
-                        </label>
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <h3 class="font-semibold text-lg mb-3 text-blue-300">If the internet is too slow (0–10 Mbps) or you cannot access the links above, please try:</h3>
-                    <h4 class="font-semibold mb-2">From a mobile phone at the school (check the below from the school's location):</h4>
-                    
-                    <div class="checklist-item">
-                        <input type="checkbox" id="check_mobile_internet" class="form-checkbox">
-                        <label for="check_mobile_internet">
-                            Do you have access to a personal phone that has internet access?
-                        </label>
-                    </div>
-                    
-                    <div class="checklist-item">
-                        <input type="checkbox" id="check_mobile_speed" class="form-checkbox">
-                        <label for="check_mobile_speed">
-                            Check internet speed here: <a href="https://www.speedtest.net/" target="_blank">https://www.speedtest.net/</a>
-                        </label>
-                    </div>
-                    
-                    <div class="checklist-item">
-                        <input type="checkbox" id="check_mobile_webapp" class="form-checkbox">
-                        <label for="check_mobile_webapp">
-                            Access the webapp via a phone: <a href="https://webapp.oxedandassessment.com/language-screen" target="_blank">https://webapp.oxedandassessment.com/language-screen</a>
-                        </label>
-                    </div>
-                    
-                    <div class="checklist-item">
-                        <input type="checkbox" id="check_mobile_portal" class="form-checkbox">
-                        <label for="check_mobile_portal">
-                            Access the portal via a phone: <a href="https://programaneli.com/py/" target="_blank">https://programaneli.com/py/</a>
-                        </label>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Connectivity Issues - Computers -->
-        <div id="computer-issues" class="section-card" x-show="!searchQuery || filter('computer connectivity wifi browser cache router internet errors loading timeout login firewall antivirus vpn')">
-            <div class="section-header" @click="sections.connectivityComputers = !sections.connectivityComputers">
-                <div class="flex items-center">
-                    <i class="fas fa-laptop text-green-500 mr-3 text-xl"></i>
-                    <h2 class="text-xl font-semibold">Connectivity Issues - Computers</h2>
-                </div>
-                <i class="fas" :class="sections.connectivityComputers ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-            </div>
-            <div class="section-content" x-show="sections.connectivityComputers">
-                <h3 class="category-header">What the Issues Look Like</h3>
-                <ul class="mb-5 space-y-2">
-                    <li><i class="fas fa-exclamation-circle text-red-500 mr-2"></i> Pages not loading or stuck on a loading screen.</li>
-                    <li><i class="fas fa-exclamation-circle text-red-500 mr-2"></i> Errors such as "This site can't be reached" or "Connection timed out."</li>
-                    <li><i class="fas fa-exclamation-circle text-red-500 mr-2"></i> Inability to log in despite correct credentials.</li>
-                    <li><i class="fas fa-exclamation-circle text-red-500 mr-2"></i> Portal appears blank or only partially loads.</li>
-                    <li><i class="fas fa-exclamation-circle text-red-500 mr-2"></i> Buttons unresponsive or very slow to react.</li>
-                </ul>
-
-                <h3 class="category-header">Common Checks & Solutions</h3>
-
-                <div class="step-item">
-                    <div class="step-number">1</div>
-                    <div class="step-content">
-                        <h4 class="font-semibold">Check WiFi Connection</h4>
-                        <p>Is the computer connected to a WiFi network?</p>
-                        <div class="mt-2 flex space-x-2">
-                            <span class="badge badge-blue">Connected</span>
-                            <span class="badge badge-amber">Limited</span>
-                            <span class="badge badge-red">Disconnected</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="step-item">
-                    <div class="step-number">2</div>
-                    <div class="step-content">
-                        <h4 class="font-semibold">Restart Router</h4>
-                        <p>Power cycle the router and reattempt connection:</p>
-                        <ol class="list-decimal ml-5 mt-2 space-y-1">
-                            <li>Unplug the router from power</li>
-                            <li>Wait 30 seconds</li>
-                            <li>Plug it back in</li>
-                            <li>Wait 2 minutes for full restart</li>
-                        </ol>
-                    </div>
-                </div>
-
-                <div class="step-item">
-                    <div class="step-number">3</div>
-                    <div class="step-content">
-                        <h4 class="font-semibold">Try Another Site</h4>
-                        <p>Test if other websites (e.g., <a href="https://www.google.com/" target="_blank">www.google.com</a>) are working to rule out general internet outage.</p>
-                    </div>
-                </div>
-
-                <div class="step-item">
-                    <div class="step-number">4</div>
-                    <div class="step-content">
-                        <h4 class="font-semibold">Browser Issues</h4>
-                        <div class="checklist-item">
-                            <input type="checkbox" id="clear_cache" class="form-checkbox">
-                            <label for="clear_cache">Clear cache and cookies</label>
-                        </div>
-                        <div class="checklist-item">
-                            <input type="checkbox" id="different_browser" class="form-checkbox">
-                            <label for="different_browser">Try in a different browser (Chrome is preferred)</label>
-                        </div>
-                        <div class="checklist-item">
-                            <input type="checkbox" id="disable_extensions" class="form-checkbox">
-                            <label for="disable_extensions">Disable browser extensions or try incognito mode</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="step-item">
-                    <div class="step-number">5</div>
-                    <div class="step-content">
-                        <h4 class="font-semibold">Firewall/Antivirus Settings</h4>
-                        <p>Ensure they aren't blocking the portal/LS URLs.</p>
-                    </div>
-                </div>
-
-                <div class="step-item">
-                    <div class="step-number">6</div>
-                    <div class="step-content">
-                        <h4 class="font-semibold">VPNs</h4>
-                        <p>Turn off any VPNs that may interfere with the connection.</p>
-                    </div>
-                </div>
-
-                <h3 class="category-header">Clues It's a Local Issue</h3>
-                <ul class="mb-5 space-y-2">
-                    <li><i class="fas fa-check-circle text-blue-500 mr-2"></i> Other sites also fail to load.</li>
-                    <li><i class="fas fa-check-circle text-blue-500 mr-2"></i> Only one user or one machine is affected.</li>
-                    <li><i class="fas fa-check-circle text-blue-500 mr-2"></i> Issues resolve with a browser switch or WiFi change.</li>
-                    <li><i class="fas fa-check-circle text-blue-500 mr-2"></i> Mobile phone hotspot works when WiFi does not.</li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- Connectivity Issues - Phones -->
-        <div id="phone-issues" class="section-card" x-show="!searchQuery || filter('phone mobile connectivity data wifi airplane cache chrome safari')">
-            <div class="section-header" @click="sections.connectivityPhones = !sections.connectivityPhones">
-                <div class="flex items-center">
-                    <i class="fas fa-mobile-alt text-indigo-500 mr-3 text-xl"></i>
-                    <h2 class="text-xl font-semibold">Connectivity Issues - Phones</h2>
-                </div>
-                <i class="fas" :class="sections.connectivityPhones ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-            </div>
-            <div class="section-content" x-show="sections.connectivityPhones">
-                <h3 class="category-header">What the Issues Look Like</h3>
-                <ul class="mb-5 space-y-2">
-                    <li><i class="fas fa-exclamation-circle text-red-500 mr-2"></i> App or webapp won't open or gets stuck on the loading screen.</li>
-                    <li><i class="fas fa-exclamation-circle text-red-500 mr-2"></i> Error messages like "No internet connection" or "Couldn't load data."</li>
-                    <li><i class="fas fa-exclamation-circle text-red-500 mr-2"></i> Delay in uploading results or recordings.</li>
-                    <li><i class="fas fa-exclamation-circle text-red-500 mr-2"></i> Buttons appear greyed out or unresponsive.</li>
-                </ul>
-
-                <h3 class="category-header">Common Checks & Solutions</h3>
-
-                <div class="step-item">
-                    <div class="step-number">1</div>
-                    <div class="step-content">
-                        <h4 class="font-semibold">WiFi/Data Toggle</h4>
-                        <p>Switch between WiFi and mobile data to see which works better.</p>
-                        <div class="mt-2 flex space-x-3">
-                            <span class="badge badge-blue">WiFi</span>
-                            <span class="badge badge-green">Mobile Data</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="step-item">
-                    <div class="step-number">2</div>
-                    <div class="step-content">
-                        <h4 class="font-semibold">Airplane Mode</h4>
-                        <p>Toggle it on and off to reset network settings.</p>
-                        <ol class="list-decimal ml-5 mt-2 space-y-1">
-                            <li>Turn on Airplane Mode for 10 seconds</li>
-                            <li>Turn off Airplane Mode</li>
-                            <li>Wait for connection to reestablish</li>
-                        </ol>
-                    </div>
-                </div>
-
-                <div class="step-item">
-                    <div class="step-number">3</div>
-                    <div class="step-content">
-                        <h4 class="font-semibold">App Refresh</h4>
-                        <p>Force-close the app and reopen.</p>
-                        <p class="text-sm text-gray-400 mt-1">On most phones: Swipe up from bottom to see recent apps, then swipe away the app to close it.</p>
-                    </div>
-                </div>
-
-                <div class="step-item">
-                    <div class="step-number">4</div>
-                    <div class="step-content">
-                        <h4 class="font-semibold">Update Browser</h4>
-                        <p>Ensure the default browser (e.g., Chrome or Safari) is up to date.</p>
-                    </div>
-                </div>
-
-                <div class="step-item">
-                    <div class="step-number">5</div>
-                    <div class="step-content">
-                        <h4 class="font-semibold">Clear Mobile Browser Cache</h4>
-                        <div class="mt-2">
-                            <details class="mb-3">
-                                <summary class="cursor-pointer text-blue-400">How to clear cache in Chrome (tap to expand)</summary>
-                                <div class="mt-2 ml-4 text-gray-300">
-                                    <ol class="list-decimal space-y-1">
-                                        <li>Open Chrome app</li>
-                                        <li>Tap the three dots (⋮) in the top right</li>
-                                        <li>Select "Settings"</li>
-                                        <li>Tap "Privacy and Security"</li>
-                                        <li>Select "Clear browsing data"</li>
-                                        <li>Choose "Cached images and files"</li>
-                                        <li>Tap "Clear data"</li>
-                                    </ol>
-                                </div>
-                            </details>
-                            <details class="mb-3">
-                                <summary class="cursor-pointer text-blue-400">How to clear cache in Safari (tap to expand)</summary>
-                                <div class="mt-2 ml-4 text-gray-300">
-                                    <ol class="list-decimal space-y-1">
-                                        <li>Open Settings app</li>
-                                        <li>Scroll down and tap "Safari"</li>
-                                        <li>Scroll down and tap "Clear History and Website Data"</li>
-                                        <li>Confirm by tapping "Clear"</li>
-                                    </ol>
-                                </div>
-                            </details>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="step-item">
-                    <div class="step-number">6</div>
-                    <div class="step-content">
-                        <h4 class="font-semibold">Try Another Network</h4>
-                        <p>e.g., home WiFi or hotspot from another device.</p>
-                    </div>
-                </div>
-
-                <div class="step-item">
-                    <div class="step-number">7</div>
-                    <div class="step-content">
-                        <h4 class="font-semibold">Restart the Phone</h4>
-                        <p>A full device restart can resolve many connection issues.</p>
-                    </div>
-                </div>
-
-                <h3 class="category-header">Clues It's a Local Issue</h3>
-                <ul class="mb-5 space-y-2">
-                    <li><i class="fas fa-check-circle text-blue-500 mr-2"></i> Works fine on a different WiFi or mobile network.</li>
-                    <li><i class="fas fa-check-circle text-blue-500 mr-2"></i> Other apps also struggling to connect.</li>
-                    <li><i class="fas fa-check-circle text-blue-500 mr-2"></i> Device hasn't been restarted in a while.</li>
-                    <li><i class="fas fa-check-circle text-blue-500 mr-2"></i> Issue is isolated to one user or device.</li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- Issues That Should Be Escalated -->
-        <div id="escalation-guide" class="section-card" x-show="!searchQuery || filter('escalation support specialist help bugs crashes login')">
-            <div class="section-header" @click="sections.escalationIssues = !sections.escalationIssues">
-                <div class="flex items-center">
-                    <i class="fas fa-arrow-up text-red-500 mr-3 text-xl"></i>
-                    <h2 class="text-xl font-semibold">Issues That Should Be Escalated</h2>
-                </div>
-                <i class="fas" :class="sections.escalationIssues ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-            </div>
-            <div class="section-content" x-show="sections.escalationIssues">
-                <div class="note-box mb-4 border-red-500">
-                    <p><i class="fas fa-exclamation-triangle text-red-500 mr-2"></i> These issues are not connectivity-related and require specialist support.</p>
-                </div>
-
-                <h3 class="category-header">Types of Issues</h3>
-                <ul class="mb-5 space-y-2">
-                    <li><i class="fas fa-angle-right text-red-400 mr-2"></i> Login credentials not working despite verified details.</li>
-                    <li><i class="fas fa-angle-right text-red-400 mr-2"></i> Unexpected app behavior (e.g., scoring errors, broken audio, data not saving).</li>
-                    <li><i class="fas fa-angle-right text-red-400 mr-2"></i> Missing or incomplete pupil data despite proper setup.</li>
-                    <li><i class="fas fa-angle-right text-red-400 mr-2"></i> Persistent issues across multiple devices or users.</li>
-                    <li><i class="fas fa-angle-right text-red-400 mr-2"></i> App crashes or bugs even with strong internet connection.</li>
-                </ul>
-
-                <h3 class="category-header">Common Checks Before Escalating</h3>
-                <div class="mb-5">
-                    <div class="checklist-item">
-                        <input type="checkbox" id="check_password" class="form-checkbox">
-                        <label for="check_password">Ensure the user has typed password into a notepad and copied that in to ensure no typos</label>
-                    </div>
-                    <div class="checklist-item">
-                        <input type="checkbox" id="check_latest_version" class="form-checkbox">
-                        <label for="check_latest_version">Has the latest version of the browser/app been installed?</label>
-                    </div>
-                    <div class="checklist-item">
-                        <input type="checkbox" id="check_cache_cleared" class="form-checkbox">
-                        <label for="check_cache_cleared">Have cache and cookies been cleared?</label>
-                    </div>
-                    <div class="checklist-item">
-                        <input type="checkbox" id="check_device_restart" class="form-checkbox">
-                        <label for="check_device_restart">Has the device been restarted?</label>
-                    </div>
-                    <div class="checklist-item">
-                        <input type="checkbox" id="check_replicate" class="form-checkbox">
-                        <label for="check_replicate">Can the issue be replicated on another device?</label>
-                    </div>
-                </div>
-
-                <h3 class="category-header">Who to Escalate To</h3>
-                <div class="p-4 bg-gray-800 rounded-lg mb-4">
-                    <p class="mb-2">Contact the support team via slack/email.</p>
-                    <p class="font-semibold mb-2">Include:</p>
-                    <ul class="space-y-2 ml-5 list-disc">
-                        <li>Description of the issue.</li>
-                        <li>Device type and browser/app used.</li>
-                        <li>Screenshots or error messages if possible.</li>
-                        <li>Steps already taken to troubleshoot.</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- LS Data Consumption -->
-        <div id="data-consumption" class="section-card" x-show="!searchQuery || filter('data consumption bandwidth usage mb megabytes')">
-            <div class="section-header" @click="sections.dataConsumption = !sections.dataConsumption">
-                <div class="flex items-center">
-                    <i class="fas fa-chart-bar text-purple-500 mr-3 text-xl"></i>
-                    <h2 class="text-xl font-semibold">LS Data Consumption</h2>
-                </div>
-                <i class="fas" :class="sections.dataConsumption ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-            </div>
-            <div class="section-content" x-show="sections.dataConsumption">
-                <div class="note-box mb-4 border-green-500">
-                    <p><i class="fas fa-lightbulb text-green-400 mr-2"></i> <strong>Reassurance for Teachers:</strong> The LS webapp has very low data consumption.</p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-                    <div class="bg-gray-800 p-4 rounded-lg">
-                        <div class="text-center mb-2">
-                            <i class="fas fa-exchange-alt text-blue-400 text-3xl"></i>
-                        </div>
-                        <h4 class="text-center font-semibold mb-1">Per Session</h4>
-                        <p class="text-center"><span class="text-xl font-bold text-blue-400">< 2 MB</span></p>
-                        <p class="text-center text-sm text-gray-400">For basic interactions (navigation, responses)</p>
-                    </div>
-                    <div class="bg-gray-800 p-4 rounded-lg">
-                        <div class="text-center mb-2">
-                            <i class="fas fa-microphone text-blue-400 text-3xl"></i>
-                        </div>
-                        <h4 class="text-center font-semibold mb-1">Audio Uploads</h4>
-                        <p class="text-center"><span class="text-xl font-bold text-blue-400">< 0.5 MB</span></p>
-                        <p class="text-center text-sm text-gray-400">Per recording (if applicable)</p>
-                    </div>
-                    <div class="bg-gray-800 p-4 rounded-lg">
-                        <div class="text-center mb-2">
-                            <i class="fas fa-calendar-day text-blue-400 text-3xl"></i>
-                        </div>
-                        <h4 class="text-center font-semibold mb-1">Daily Usage</h4>
-                        <p class="text-center"><span class="text-xl font-bold text-blue-400">< 10 MB</span></p>
-                        <p class="text-center text-sm text-gray-400">Total even with multiple pupils</p>
-                    </div>
-                </div>
-
-                <div class="p-4 bg-blue-900 bg-opacity-30 border border-blue-800 rounded-lg">
-                    <h3 class="font-semibold text-lg mb-2 text-blue-300">Key Message</h3>
-                    <p>LS is designed to be lightweight and friendly for low-bandwidth environments. It should not cause noticeable data usage on teacher devices.</p>
-                </div>
-
-                <div class="mt-5">
-                    <h3 class="category-header">Data Usage Comparison</h3>
-                    <div class="space-y-4 mt-3">
-                        <div>
-                            <div class="flex justify-between mb-1">
-                                <span>LS Session (< 2MB)</span>
-                                <span>2 MB</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-bar-fill bg-green-500" style="width: 2%;"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between mb-1">
-                                <span>1 Minute of SD Video</span>
-                                <span>12 MB</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-bar-fill bg-blue-500" style="width: 12%;"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between mb-1">
-                                <span>Browsing Social Media (10 min)</span>
-                                <span>20 MB</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-bar-fill bg-purple-500" style="width: 20%;"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between mb-1">
-                                <span>5 Minute Video Call</span>
-                                <span>50 MB</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-bar-fill bg-yellow-500" style="width: 50%;"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Internet Speed Explained -->
-        <div id="internet-speed-guide" class="section-card" x-show="!searchQuery || filter('internet speed mbps slow fast')">
-            <div class="section-header" @click="sections.internetSpeed = !sections.internetSpeed">
-                <div class="flex items-center">
-                    <i class="fas fa-tachometer-alt text-yellow-500 mr-3 text-xl"></i>
-                    <h2 class="text-xl font-semibold">Internet Speed Explained</h2>
-                </div>
-                <i class="fas" :class="sections.internetSpeed ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-            </div>
-            <div class="section-content" x-show="sections.internetSpeed">
-                <h3 class="text-lg font-semibold mb-3">What Is Internet Speed?</h3>
-                <p class="mb-4">Internet speed is how fast data moves between your device (like a phone or laptop) and the internet. It's measured in Mbps - Megabits per second.</p>
                 
-                <div class="note-box mb-5">
-                    <p><i class="fas fa-info-circle mr-2"></i> The median mobile internet download speed via cellular data networks is 19.23 Mbps as of January 2025 in Paraguay.</p>
+                <div class="mt-2">
+                    <a href="#pre-visit" @click.prevent="activeSectionId = 'pre-visit'; sections.preVisit = true" class="nav-item" :class="{'active': activeSectionId === 'pre-visit'}">
+                        <i class="fas fa-clipboard-check nav-icon"></i> Pre-site Visit Checklist
+                    </a>
+                    <a href="#computer-issues" @click.prevent="activeSectionId = 'computer-issues'; sections.connectivityComputers = true" class="nav-item" :class="{'active': activeSectionId === 'computer-issues'}">
+                        <i class="fas fa-laptop nav-icon"></i> Computer Issues
+                    </a>
+                    <a href="#phone-issues" @click.prevent="activeSectionId = 'phone-issues'; sections.connectivityPhones = true" class="nav-item" :class="{'active': activeSectionId === 'phone-issues'}">
+                        <i class="fas fa-mobile-alt nav-icon"></i> Phone Issues
+                    </a>
+                    <a href="#escalation-guide" @click.prevent="activeSectionId = 'escalation-guide'; sections.escalationIssues = true" class="nav-item" :class="{'active': activeSectionId === 'escalation-guide'}">
+                        <i class="fas fa-arrow-up nav-icon"></i> Escalation Guide
+                    </a>
+                    <a href="#data-consumption" @click.prevent="activeSectionId = 'data-consumption'; sections.dataConsumption = true" class="nav-item" :class="{'active': activeSectionId === 'data-consumption'}">
+                        <i class="fas fa-chart-bar nav-icon"></i> Data Consumption
+                    </a>
+                    <a href="#internet-speed-guide" @click.prevent="activeSectionId = 'internet-speed-guide'; sections.internetSpeed = true" class="nav-item" :class="{'active': activeSectionId === 'internet-speed-guide'}">
+                        <i class="fas fa-tachometer-alt nav-icon"></i> Internet Speed Guide
+                    </a>
                 </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <!-- Slow Internet -->
-                    <div class="bg-gray-800 rounded-lg overflow-hidden">
-                        <div class="bg-red-900 p-3 text-center">
-                            <h4 class="font-semibold text-lg">Slow Internet</h4>
-                            <p class="text-lg font-bold">0–10 Mbps</p>
-                        </div>
-                        <div class="p-4 space-y-3">
-                            <div>
-                                <div class="flex items-center mb-1">
-                                    <i class="fas fa-globe text-red-400 mr-2"></i>
-                                    <span class="font-semibold">Web browsing</span>
-                                </div>
-                                <p class="text-sm text-gray-300">Works okay for simple websites but may take time to load image-heavy pages.</p>
-                            </div>
-                            <div>
-                                <div class="flex items-center mb-1">
-                                    <i class="fas fa-play-circle text-red-400 mr-2"></i>
-                                    <span class="font-semibold">Streaming</span>
-                                </div>
-                                <p class="text-sm text-gray-300">You can watch YouTube or Netflix, but only in standard definition (SD). You'll often see buffering.</p>
-                            </div>
-                            <div>
-                                <div class="flex items-center mb-1">
-                                    <i class="fas fa-video text-red-400 mr-2"></i>
-                                    <span class="font-semibold">Video calls</span>
-                                </div>
-                                <p class="text-sm text-gray-300">Choppy or blurry on Zoom or FaceTime, especially if more than one person is on the internet.</p>
-                            </div>
-                            <div>
-                                <div class="flex items-center mb-1">
-                                    <i class="fas fa-download text-red-400 mr-2"></i>
-                                    <span class="font-semibold">Downloading a movie</span>
-                                </div>
-                                <p class="text-sm text-gray-300">Could take over an hour.</p>
-                            </div>
-                            <div class="pt-2 border-t border-gray-700">
-                                <p class="italic text-sm">Feels like: Walking in mud - you'll get there, but slowly and with frustration.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Medium Speed -->
-                    <div class="bg-gray-800 rounded-lg overflow-hidden">
-                        <div class="bg-yellow-900 p-3 text-center">
-                            <h4 class="font-semibold text-lg">Medium Speed</h4>
-                            <p class="text-lg font-bold">10–100 Mbps</p>
-                        </div>
-                        <div class="p-4 space-y-3">
-                            <div>
-                                <div class="flex items-center mb-1">
-                                    <i class="fas fa-globe text-yellow-400 mr-2"></i>
-                                    <span class="font-semibold">Web browsing</span>
-                                </div>
-                                <p class="text-sm text-gray-300">Fast and smooth.</p>
-                            </div>
-                            <div>
-                                <div class="flex items-center mb-1">
-                                    <i class="fas fa-play-circle text-yellow-400 mr-2"></i>
-                                    <span class="font-semibold">Streaming</span>
-                                </div>
-                                <p class="text-sm text-gray-300">You can watch in HD (High Definition) without issues. Maybe even 4K on the higher end.</p>
-                            </div>
-                            <div>
-                                <div class="flex items-center mb-1">
-                                    <i class="fas fa-video text-yellow-400 mr-2"></i>
-                                    <span class="font-semibold">Video calls</span>
-                                </div>
-                                <p class="text-sm text-gray-300">Clear and stable, even with multiple people.</p>
-                            </div>
-                            <div>
-                                <div class="flex items-center mb-1">
-                                    <i class="fas fa-download text-yellow-400 mr-2"></i>
-                                    <span class="font-semibold">Downloading a movie</span>
-                                </div>
-                                <p class="text-sm text-gray-300">Takes about 5–20 minutes, depending on the file size.</p>
-                            </div>
-                            <div class="pt-2 border-t border-gray-700">
-                                <p class="italic text-sm">Feels like: Driving a car on a regular road - works well for most daily tasks.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Fast Internet -->
-                    <div class="bg-gray-800 rounded-lg overflow-hidden">
-                        <div class="bg-green-900 p-3 text-center">
-                            <h4 class="font-semibold text-lg">Fast Internet</h4>
-                            <p class="text-lg font-bold">100+ Mbps</p>
-                        </div>
-                        <div class="p-4 space-y-3">
-                            <div>
-                                <div class="flex items-center mb-1">
-                                    <i class="fas fa-globe text-green-400 mr-2"></i>
-                                    <span class="font-semibold">Web browsing</span>
-                                </div>
-                                <p class="text-sm text-gray-300">Instant page loading.</p>
-                            </div>
-                            <div>
-                                <div class="flex items-center mb-1">
-                                    <i class="fas fa-play-circle text-green-400 mr-2"></i>
-                                    <span class="font-semibold">Streaming</span>
-                                </div>
-                                <p class="text-sm text-gray-300">Multiple people can stream in 4K at the same time with no lag.</p>
-                            </div>
-                            <div>
-                                <div class="flex items-center mb-1">
-                                    <i class="fas fa-video text-green-400 mr-2"></i>
-                                    <span class="font-semibold">Video calls</span>
-                                </div>
-                                <p class="text-sm text-gray-300">Crisp and super reliable. Online gaming: No noticeable delay.</p>
-                            </div>
-                            <div>
-                                <div class="flex items-center mb-1">
-                                    <i class="fas fa-download text-green-400 mr-2"></i>
-                                    <span class="font-semibold">Downloading a movie</span>
-                                </div>
-                                <p class="text-sm text-gray-300">Can take just a few minutes or less.</p>
-                            </div>
-                            <div class="pt-2 border-t border-gray-700">
-                                <p class="italic text-sm">Feels like: Flying on a jet - everything happens quickly, even with many devices online.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="note-box mb-4 border-green-400">
-                    <h4 class="font-semibold mb-1">Bonus Tip</h4>
-                    <p>If it's just you checking email and watching Netflix, 20–30 Mbps can be enough.</p>
-                </div>
-
-                <div class="mt-6">
-                    <h3 class="category-header">Internet Speed Requirements by Application</h3>
-                    <table class="w-full mt-3">
-                        <thead>
-                            <tr>
-                                <th>Application</th>
-                                <th>Minimum Speed</th>
-                                <th>Recommended Speed</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Basic Web Browsing</td>
-                                <td>1 Mbps</td>
-                                <td>5+ Mbps</td>
-                            </tr>
-                            <tr>
-                                <td>Email</td>
-                                <td>0.5 Mbps</td>
-                                <td>2+ Mbps</td>
-                            </tr>
-                            <tr>
-                                <td>SD Video Streaming</td>
-                                <td>3 Mbps</td>
-                                <td>5+ Mbps</td>
-                            </tr>
-                            <tr>
-                                <td>HD Video Streaming</td>
-                                <td>5 Mbps</td>
-                                <td>10+ Mbps</td>
-                            </tr>
-                            <tr>
-                                <td>4K Video Streaming</td>
-                                <td>25 Mbps</td>
-                                <td>35+ Mbps</td>
-                            </tr>
-                            <tr>
-                                <td>Video Conferencing</td>
-                                <td>3 Mbps</td>
-                                <td>10+ Mbps</td>
-                            </tr>
-                            <tr>
-                                <td>Online Gaming</td>
-                                <td>3 Mbps</td>
-                                <td>15+ Mbps</td>
-                            </tr>
-                            <tr>
-                                <td>LS Webapp</td>
-                                <td>1 Mbps</td>
-                                <td>5+ Mbps</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                
+                <div class="mt-auto p-4 text-center text-sm text-gray-500">
+                    <p>Support Dashboard v1.0</p>
                 </div>
             </div>
-        </div>
+            
+            <!-- Main Content -->
+            <div class="content">
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-white mb-2">Customer Support Dashboard</h1>
+                    <p class="text-gray-400">A comprehensive guide for the support team</p>
+                </div>
 
-        <!-- Footer -->
-        <div class="mt-8 text-center text-gray-400 text-sm">
-            <p>Paraguay Troubleshooting Support Dashboard</p>
-            <p class="mt-1">For customer service team use</p>
-        </div>
-    </div>
-</body>
-</html>
+                <!-- Search Box -->
+                <div class="mb-6 relative search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input 
+                        type="text" 
+                        x-model="searchQuery" 
+                        @input="updateSearchStats()" 
+                        class="search-box" 
+                        placeholder="Search for troubleshooting topics (e.g., 'wifi issues', 'slow internet')..."
+                        autocomplete="off"
+                    >
+                    
+                    <div class="flex justify-between items-center mt-2" x-show="searchQuery">
+                        <div class="search-stats" x-show="searchQuery">
+                            <span x-text="matchCount"></span> results found
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pre-site Visit Checklist -->
+                <div id="pre-visit" class="section-card" x-show="!searchQuery || filter('pre-site visit checklist computer mobile speed test webapp portal internet access troubleshooting')">
+                    <div class="section-header" @click="sections.preVisit = !sections.preVisit">
+                        <div class="flex items-center">
+                            <i class="fas fa-clipboard-check text-blue-500 mr-3 text-xl"></i>
+                            <h2 class="text-xl font-semibold">Pre-site Visit Checklist</h2>
+                        </div>
+                        <i class="fas" :class="sections.preVisit ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                    </div>
+                    <div class="section-content" x-show="sections.preVisit">
+                        <div class="note-box mb-4">
+                            <p><i class="fas fa-info-circle mr-2"></i> Before we visit your setting, please check the following to ensure that we can make the most of our visit.</p>
+                        </div>
+
+                        <div class="mb-6">
+                            <h3 class="font-semibold text-lg mb-3 text-blue-300">From a computer that you'll be using:</h3>
+                            
+                            <div class="checklist-item">
+                                <input type="checkbox" id="check_internet_speed" class="form-checkbox">
+                                <label for="check_internet_speed">
+                                    Check internet speed here: <a href="https://www.speedtest.net/" target="_blank">https://www.speedtest.net/</a>
+                                </label>
+                            </div>
+                            
+                            <div class="checklist-item">
+                                <input type="checkbox" id="check_webapp_access" class="form-checkbox">
+                                <label for="check_webapp_access">
+                                    Access the webapp via a computer: <a href="https://webapp.oxedandassessment.com/language-screen" target="_blank">https://webapp.oxedandassessment.com/language-screen</a>
+                                </label>
+                            </div>
+                            
+                            <div class="checklist-item">
+                                <input type="checkbox" id="check_portal_access" class="form-checkbox">
+                                <label for="check_portal_access">
+                                    Access the portal via a computer: <a href="https://programaneli.com/py/" target="_blank">https://programaneli.com/py/</a>
+                                </label>
+                            </div>
+                            
+                            <div class="checklist-item">
+                                <input type="checkbox" id="check_other_sites" class="form-checkbox">
+                                <label for="check_other_sites">
+                                    Try other websites (e.g., <a href="https://www.google.com/" target="_blank">www.google.com</a>, <a href="https://www.bbc.com/" target="_blank">www.bbc.com</a>) to rule out general internet outage.
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h3 class="font-semibold text-lg mb-3 text-blue-300">If the internet is too slow (0–10 Mbps) or you cannot access the links above, please try:</h3>
+                            <h4 class="font-semibold mb-2">From a mobile phone at the school (check the below from the school's location):</h4>
+                            
+                            <div class="checklist-item">
+                                <input type="checkbox" id="check_mobile_internet" class="form-checkbox">
+                                <label for="check_mobile_internet">
+                                    Do you have access to a personal phone that has internet access?
+                                </label>
+                            </div>
+                            
+                            <div class="checklist-item">
+                                <input type="checkbox" id="check_mobile_speed" class="form-checkbox">
+                                <label for="check_mobile_speed">
+                                    Check internet speed here: <a href="https://www.speedtest.net/" target="_blank">https://www.speedtest.net/</a>
+                                </label>
+                            </div>
+                            
+                            <div class="checklist-item">
+                                <input type="checkbox" id="check_mobile_webapp" class="form-checkbox">
+                                <label for="check_mobile_webapp">
+                                    Access the webapp via a phone: <a href="https://webapp.oxedandassessment.com/language-screen" target="_blank">https://webapp.oxedandassessment.com/language-screen</a>
+                                </label>
+                            </div>
+                            
+                            <div class="checklist-item">
+                                <input type="checkbox" id="check_mobile_portal" class="form-checkbox">
+                                <label for="check_mobile_portal">
+                                    Access the portal via a phone: <a href="https://programaneli.com/py/" target="_blank">https://programaneli.com/py/</a>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Connectivity Issues - Computers -->
+                <div id="computer-issues" class="section-card" x-show="!searchQuery || filter('computer connectivity wifi browser cache router internet errors loading timeout login firewall antivirus vpn')">
+                    <div class="section-header" @click="sections.connectivityComputers = !sections.connectivityComputers">
+                        <div class="flex items-center">
+                            <i class="fas fa-laptop text-green-500 mr-3 text-xl"></i>
+                            <h2 class="text-xl font-semibold">Connectivity Issues - Computers</h2>
+                        </div>
+                        <i class="fas" :class="sections.connectivityComputers ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                    </div>
+                    <div class="section-content" x-show="sections.connectivityComputers">
+                        <h3 class="category-header">What the Issues Look Like</h3>
+                        <ul class="mb-5 space-y-2">
+                            <li><i class="fas fa-exclamation-circle text-red-500 mr-2"></i> Pages not loading or stuck on a loading screen.</li>
+                            <li><i class="fas fa-exclamation-circle text-red-500 mr-2"></i> Errors such as "This site can't be reached" or "Connection timed out."</li>
+                            <li><i class="fas fa-exclamation-circle text-red-500 mr-2"></i> Inability to log in despite correct credentials.</li>
+                            <li><i class="fas fa-exclamation-circle text-red-500 mr-2"></i> Portal appears blank or only partially loads.</li>
+                            <li><i class="fas fa-exclamation-circle text-red-500 mr-2"></i> Buttons unresponsive or very slow to react.</li>
+                        </ul>
+
+                        <h3 class="category-header">Common Checks & Solutions</h3>
+
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4 class="font-semibold">Check WiFi Connection</h4>
+                                <p>Is the computer connected to a WiFi network?</p>
+                                <div class="mt-2 flex space-x-2">
+                                    <span class="badge badge-blue">Connected</span>
+                                    <span class="badge badge-amber">Limited</span>
+                                    <span class="badge badge-red">Disconnected</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4 class="font-semibold">Restart Router</h4>
+                                <p>Power cycle the router and reattempt connection:</p>
+                                <ol class="list-decimal ml-5 mt-2 space-y-1">
+                                    <li>Unplug the router from power</li>
+                                    <li>Wait 30 seconds</li>
+                                    <li>Plug it back in</li>
+                                    <li>Wait 2 minutes for full restart</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4 class="font-semibold">Try Another Site</h4>
+                                <p>Test if other websites (e.g., <a href="https://www.google.com/" target="_blank">www.google.com</a>) are working to rule out general internet outage.</p>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <h4 class="font-semibold">Browser Issues</h4>
+                                <div class="checklist-item">
+                                    <input type="checkbox" id="clear_cache" class="form-checkbox">
+                                    <label for="clear_cache">Clear cache and cookies</label>
+                                </div>
+                                <div class="checklist-item">
+                                    <input type="checkbox" id="different_browser" class="form-checkbox">
+                                    <label for="different_browser">Try in a different browser (Chrome is preferred)</label>
+                                </div>
+                                <div class="checklist-item">
+                                    <input type="checkbox" id="disable_extensions" class="form-checkbox">
+                                    <label for="disable_extensions">Disable browser extensions or try incognito mode</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-number">5</div>
+                            <div class="step-content">
+                                <h4 class="font-semibold">Firewall/Antivirus Settings</h4>
+                                <p>Ensure they aren't blocking the portal/LS URLs.</p>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-number">6</div>
+                            <div class="step-content">
+                                <h4 class="font-semibold">VPNs</h4>
+                                <p>Turn off any VPNs that may interfere with the connection.</p>
+                            </div>
+                        </div>
+
+                        <h3 class="category-header">Clues It's a Local Issue</h3>
+                        <ul class="mb-5 space-y-2">
+                            <li><i class="fas fa-check-circle text-blue-500 mr-2"></i> Other sites also fail to load.</li>
+                            <li><i class="fas fa-check-circle text-blue-500 mr-2"></i> Only one user or one machine is affected.</li>
+                            <li><i class="fas fa-check-circle text-blue-500 mr-2"></i> Issues resolve with a browser switch or WiFi change.</li>
+                            <li><i class="fas fa-check-circle text-blue-500 mr-2"></i> Mobile phone hotspot works when WiFi does not.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Connectivity Issues - Phones -->
+                <div id="phone-issues" class="section-card" x-show="!searchQuery || filter('phone mobile connectivity data wifi airplane cache chrome safari')">
+                    <div class="section-header" @click="sections.connectivityPhones = !sections.connectivityPhones">
+                        <div class="flex items-center">
+                            <i class="fas fa-mobile-alt text-indigo-500 mr-3 text-xl"></i>
+                            <h2 class="text-xl font-semibold">Connectivity Issues - Phones</h2>
+                        </div>
+                        <i class="fas" :class="sections.connectivityPhones ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                    </div>
+                    <div class="section-content" x-show="sections.connectivityPhones">
+                        <h3 class="category-header">What the Issues Look Like</h3>
+                        <ul class="mb-5 space-y-2">
+                            <li><i class="fas fa-exclamation-circle text-red-500 mr-2"></i> App or webapp won't open or gets stuck on the loading screen.</li>
+                            <li><i class="fas fa-exclamation-circle text-red-500 mr-2"></i> Error messages like "No internet connection" or "Couldn't load data."</li>
+                            <li><i class="fas fa-exclamation-circle text-red-500 mr-2"></i> Delay in uploading results or recordings.</li>
+                            <li><i class="fas fa-exclamation-circle text-red-500 mr-2"></i> Buttons appear greyed out or unresponsive.</li>
+                        </ul>
+
+                        <h3 class="category-header">Common Checks & Solutions</h3>
+
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4 class="font-semibold">WiFi/Data Toggle</h4>
+                                <p>Switch between WiFi and mobile data to see which works better.</p>
+                                <div class="mt-2 flex space-x-3">
+                                    <span class="badge badge-blue">WiFi</span>
+                                    <span class="badge badge-green">Mobile Data</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4 class="font-semibold">Airplane Mode</h4>
+                                <p>Toggle it on and off to reset network settings.</p>
+                                <ol class="list-decimal ml-5 mt-2 space-y-1">
+                                    <li>Turn on Airplane Mode for 10 seconds</li>
+                                    <li>Turn off Airplane Mode</li>
+                                    <li>Wait for connection to reestablish</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4 class="font-semibold">App Refresh</h4>
+                                <p>Force-close the app and reopen.</p>
+                                <p class="text-sm text-gray-400 mt-1">On most phones: Swipe up from bottom to see recent apps, then swipe away the app to close it.</p>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <h4 class="font-semibold">Update Browser</h4>
+                                <p>Ensure the default browser (e.g., Chrome or Safari) is up to date.</p>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-number">5</div>
+                            <div class="step-content">
+                                <h4 class="font-semibold">Clear Mobile Browser Cache</h4>
+                                <div class="mt-2">
+                                    <details class="mb-3">
+                                        <summary class="cursor-pointer text-blue-400">How to clear cache in Chrome (tap to expand)</summary>
+                                        <div class="mt-2 ml-4 text-gray-300">
+                                            <ol class="list-decimal space-y-1">
+                                                <li>Open Chrome app</li>
+                                                <li>Tap the three dots (⋮) in the top right</li>
+                                                <li>Select "Settings"</li>
+                                                <li>Tap "Privacy and Security"</li>
+                                                <li>Select "Clear browsing data"</li>
+                                                <li>Choose "Cached images and files"</li>
+                                                <li>Tap "Clear data"</li>
+                                            </ol>
+                                        </div>
+                                    </details>
+                                    <details class="mb-3">
+                                        <summary class="cursor-pointer text-blue-400">How to clear cache in Safari (tap to expand)</summary>
+                                        <div class="mt-2 ml-4 text-gray-300">
+                                            <ol class="list-decimal space-y-1">
+                                                <li>Open Settings app</li>
+                                                <li>Scroll down and tap "Safari"</li>
+                                                <li>Scroll down and tap "Clear History and Website Data"</li>
+                                                <li>Confirm by tapping "Clear"</li>
+                                            </ol>
+                                        </div>
+                                    </details>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-number">6</div>
+                            <div class="step-content">
+                                <h4 class="font-semibold">Try Another Network</h4>
+                                <p>e.g., home WiFi or hotspot from another device.</p>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-number">7</div>
+                            <div class="step-content">
+                                <h4 class="font-semibold">Restart the Phone</h4>
+                                <p>A full device restart can resolve many connection issues.</p>
+                            </div>
+                        </div>
+
+                        <h3 class="category-header">Clues It's a Local Issue</h3>
+                        <ul class="mb-5 space-y-2">
+                            <li><i class="fas fa-check-circle text-blue-500 mr-2"></i> Works fine on a different WiFi or mobile network.</li>
+                            <li><i class="fas fa-check-circle text-blue-500 mr-2"></i> Other apps also struggling to connect.</li>
+                            <li><i class="fas fa-check-circle text-blue-500 mr-2"></i> Device hasn't been restarted in a while.</li>
+                            <li><i class="fas fa-check-circle text-blue-500 mr-2"></i> Issue is isolated to one user or device.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Issues That Should Be Escalated -->
+                <div id="escalation-guide" class="section-card" x-show="!searchQuery || filter('escalation support specialist help bugs crashes login')">
+                    <div class="section-header" @click="sections.escalationIssues = !sections.escalationIssues">
+                        <div class="flex items-center">
+                            <i class="fas fa-arrow-up text-red-500 mr-3 text-xl"></i>
+                            <h2 class="text-xl font-semibold">Issues That Should Be Escalated</h2>
+                        </div>
+                        <i class="fas" :class="sections.escalationIssues ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                    </div>
+                    <div class="section-content" x-show="sections.escalationIssues">
+                        <div class="note-box mb-4 border-red-500">
+                            <p><i class="fas fa-exclamation-triangle text-red-500 mr-2"></i> These issues are not connectivity-related and require specialist support.</p>
+                        </div>
+
+                        <h3 class="category-header">Types of Issues</h3>
+                        <ul class="mb-5 space-y-2">
+                            <li><i class="fas fa-angle-right text-red-400 mr-2"></i> Login credentials not working despite verified details.</li>
+                            <li><i class="fas fa-angle-right text-red-400 mr-2"></i> Unexpected app behavior (e.g., scoring errors, broken audio, data not saving).</li>
+                            <li><i class="fas fa-angle-right text-red-400 mr-2"></i> Missing or incomplete pupil data despite proper setup.</li>
+                            <li><i class="fas fa-angle-right text-red-400 mr-2"></i> Persistent issues across multiple devices or users.</li>
+                            <li><i class="fas fa-angle-right text-red-400 mr-2"></i> App crashes or bugs even with strong internet connection.</li>
+                        </ul>
+
+                        <h3 class="category-header">Common Checks Before Escalating</h3>
+                        <div class="mb-5">
+                            <div class="checklist-item">
+                                <input type="checkbox" id="check_password" class="form-checkbox">
+                                <label for="check_password">Ensure the user has typed password into a notepad and copied that in to ensure no typos</label>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" id="check_latest_version" class="form-checkbox">
+                                <label for="check_latest_version">Has the latest version of the browser/app been installed?</label>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" id="check_cache_cleared" class="form-checkbox">
+                                <label for="check_cache_cleared">Have cache and cookies been cleared?</label>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" id="check_device_restart" class="form-checkbox">
+                                <label for="check_device_restart">Has the device been restarted?</label>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" id="check_replicate" class="form-checkbox">
+                                <label for="check_replicate">Can the issue be replicated on another device?</label>
+                            </div>
+                        </div>
+
+                        <h3 class="category-header">Who to Escalate To</h3>
+                        <div class="p-4 bg-gray-800 rounded-lg mb-4">
+                            <p class="mb-2">Contact the support team via slack/email.</p>
+                            <p class="font-semibold mb-2">Include:</p>
+                            <ul class="space-y-2 ml-5 list-disc">
+                                <li>Description of the issue.</li>
+                                <li>Device type and browser/app used.</li>
+                                <li>Screenshots or error messages if possible.</li>
+                                <li>Steps already taken to troubleshoot.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LS Data Consumption -->
+                <div id="data-consumption" class="section-card" x-show="!searchQuery || filter('data consumption bandwidth usage mb megabytes')">
+                    <div class="section-header" @click="sections.dataConsumption = !sections.dataConsumption">
+                        <div class="flex items-center">
+                            <i class="fas fa-chart-bar text-purple-500 mr-3 text-xl"></i>
+                            <h2 class="text-xl font-semibold">LS Data Consumption</h2>
+                        </div>
+                        <i class="fas" :class="sections.dataConsumption ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                    </div>
+                    <div class="section-content" x-show="sections.dataConsumption">
+                        <div class="note-box mb-4 border-green-500">
+                            <p><i class="fas fa-lightbulb text-green-400 mr-2"></i> <strong>Reassurance for Teachers:</strong> The LS webapp has very low data consumption.</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+                            <div class="bg-gray-800 p-4 rounded-lg">
+                                <div class="text-center mb-2">
+                                    <i class="fas fa-exchange-alt text-blue-400 text-3xl"></i>
+                                </div>
+                                <h4 class="text-center font-semibold mb-1">Per Session</h4>
+                                <p class="text-center"><span class="text-xl font-bold text-blue-400">< 2 MB</span></p>
+                                <p class="text-center text-sm text-gray-400">For basic interactions (navigation, responses)</p>
+                            </div>
+                            <div class="bg-gray-800 p-4 rounded-lg">
+                                <div class="text-center mb-2">
+                                    <i class="fas fa-microphone text-blue-400 text-3xl"></i>
+                                </div>
+                                <h4 class="text-center font-semibold mb-1">Audio Uploads</h4>
+                                <p class="text-center"><span class="text-xl font-bold text-blue-400">< 0.5 MB</span></p>
+                                <p class="text-center text-sm text-gray-400">Per recording (if applicable)</p>
+                            </div>
+                            <div class="bg-gray-800 p-4 rounded-lg">
+                                <div class="text-center mb-2">
+                                    <i class="fas fa-calendar-day text-blue-400 text-3xl"></i>
+                                </div>
+                                <h4 class="text-center font-semibold mb-1">Daily Usage</h4>
+                                <p class="text-center"><span class="text-xl font-bold text-blue-400">< 10 MB</span></p>
+                                <p class="text-center text-sm text-gray-400">Total even with multiple pupils</p>
+                            </div>
+                        </div>
+
+                        <div class="p-4 bg-blue-900 bg-opacity-30 border border-blue-800 rounded-lg">
+                            <h3 class="font-semibold text-lg mb-2 text-blue-300">Key Message</h3>
+                            <p>LS is designed to be lightweight and friendly for low-bandwidth environments. It should not cause noticeable data usage on teacher devices.</p>
+                        </div>
+
+                        <div class="mt-5">
+                            <h3 class="category-header">Data Usage Comparison</h3>
+                            <div class="space-y-4 mt-3">
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span>LS Session (< 2MB)</span>
+                                        <span>2 MB</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-bar-fill bg-green-500" style="width: 2%;"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span>1 Minute of SD Video</span>
+                                        <span>12 MB</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-bar-fill bg-blue-500" style="width: 12%;"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span>Browsing Social Media (10 min)</span>
+                                        <span>20 MB</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-bar-fill bg-purple-500" style="width: 20%;"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span>5 Minute Video Call</span>
+                                        <span>50 MB</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-bar-fill bg-yellow-500" style="width: 50%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Internet Speed Explained -->
+                <div id="internet-speed-guide" class="section-card" x-show="!searchQuery || filter('internet speed mbps slow fast')">
+                    <div class="section-header" @click="sections.internetSpeed = !sections.internetSpeed">
+                        <div class="flex items-center">
+                            <i class="fas fa-tachometer-alt text-yellow-500 mr-3 text-xl"></i>
+                            <h2 class="text-xl font-semibold">Internet Speed Explained</h2>
+                        </div>
+                        <i class="fas" :class="sections.internetSpeed ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                    </div>
+                    <div class="section-content" x-show="sections.internetSpeed">
+                        <h3 class="text-lg font-semibold mb-3">What Is Internet Speed?</h3>
+                        <p class="mb-4">Internet speed is how fast data moves between your device (like a phone or laptop) and the internet. It's measured in Mbps - Megabits per second.</p>
+                        
+                        <div class="note-box mb-5">
+                            <p><i class="fas fa-info-circle mr-2"></i> The median mobile internet download speed via cellular data networks is 19.23 Mbps as of January 2025 in Paraguay.</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                            <!-- Slow Internet -->
+                            <div class="bg-gray-800 rounded-lg overflow-hidden">
+                                <div class="bg-red-900 p-3 text-center">
+                                    <h4 class="font-semibold text-lg">Slow Internet</h4>
+                                    <p class="text-lg font-bold">0–10 Mbps</p>
+                                </div>
+                                <div class="p-4 space-y-3">
+                                    <div>
+                                        <div class="flex items-center mb-1">
+                                            <i class="fas fa-globe text-red-400 mr-2"></i>
+                                            <span class="font-semibold">Web browsing</span>
+                                        </div>
+                                        <p class="text-sm text-gray-300">Works okay for simple websites but may take time to load image-heavy pages.</p>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center mb-1">
+                                            <i class="fas fa-play-circle text-red-400 mr-2"></i>
+                                            <span class="font-semibold">Streaming</span>
+                                        </div>
+                                        <p class="text-sm text-gray-300">You can watch YouTube or Netflix, but only in standard definition (SD). You'll often see buffering.</p>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center mb-1">
+                                            <i class="fas fa-video text-red-400 mr-2"></i>
+                                            <span class="font-semibold">Video calls</span>
+                                        </div>
+                                        <p class="text-sm text-gray-300">Choppy or blurry on Zoom or FaceTime, especially if more than one person is on the internet.</p>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center mb-1">
+                                            <i class="fas fa-download text-red-400 mr-2"></i>
+                                            <span class="font-semibold">Downloading a movie</span>
+                                        </div>
+                                        <p class="text-sm text-gray-300">Could take over an hour.</p>
+                                    </div>
+                                    <div class="pt-2 border-t border-gray-700">
+                                        <p class="italic text-sm">Feels like: Walking in mud - you'll get there, but slowly and with frustration.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Medium Speed -->
+                            <div class="bg-gray-800 rounded-lg overflow-hidden">
+                                <div class="bg-yellow-900 p-3 text-center">
+                                    <h4 class="font-semibold text-lg">Medium Speed</h4>
+                                    <p class="text-lg font-bold">10–100 Mbps</p>
+                                </div>
+                                <div class="p-4 space-y-3">
+                                    <div>
+                                        <div class="flex items-center mb-1">
+                                            <i class="fas fa-globe text-yellow-400 mr-2"></i>
+                                            <span class="font-semibold">Web browsing</span>
+                                        </div>
+                                        <p class="text-sm text-gray-300">Fast and smooth.</p>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center mb-1">
+                                            <i class="fas fa-play-circle text-yellow-400 mr-2"></i>
+                                            <span class="font-semibold">Streaming</span>
+                                        </div>
+                                        <p class="text-sm text-gray-300">You can watch in HD (High Definition) without issues. Maybe even 4K on the higher end.</p>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center mb-1">
+                                            <i class="fas fa-video text-yellow-400 mr-2"></i>
+                                            <span class="font-semibold">Video calls</span>
+                                        </div>
+                                        <p class="text-sm text-gray-300">Clear and stable, even with multiple people.</p>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center mb-1">
+                                            <i class="fas fa-download text-yellow-400 mr-2"></i>
+                                            <span class="font-semibold">Downloading a movie</span>
+                                        </div>
